@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive 3D Christmas Wish</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #0f2027; font-family: 'Mountains of Christmas', cursive, 'Arial', sans-serif; }
+        canvas { display: block; outline: none; }
+        
+        /* Google Font for Christmas feel */
+        @import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&display=swap');
+
+        /* UI Overlay */
+        #ui-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .ui-element {
+            pointer-events: auto;
+            transition: opacity 0.5s, transform 0.5s;
+            text-align: center;
+        }
+
+        /* Animated Welcome Text */
+        #welcome-text {
+            color: #fff;
+            text-shadow: 0 0 10px #ff0000, 0 0 20px #00ff00;
+            font-size: clamp(3rem, 6vw, 5rem);
+            margin-bottom: 10px;
+            font-family: 'Mountains of Christmas', cursive;
+            animation: textGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes textGlow {
+            from {
+                text-shadow: 0 0 10px #ff0000, 0 0 20px #00ff00, 0 0 30px #ff0000;
+                transform: scale(1);
+            }
+            to {
+                text-shadow: 0 0 20px #00ff00, 0 0 30px #ff0000, 0 0 40px #00ff00;
+                transform: scale(1.05);
+            }
+        }
+
+        p.subtitle {
+            color: #e0e0e0;
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            font-family: 'Arial', sans-serif;
+        }
+
+        button {
+            background: linear-gradient(135deg, #c31432, #240b36); /* Red to Dark */
+            border: 2px solid #ffd700;
+            border-radius: 50px;
+            padding: 15px 40px;
+            color: #ffd700; /* Gold text */
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            transition: transform 0.2s, box-shadow 0.2s;
+            outline: none;
+            font-family: 'Mountains of Christmas', cursive;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button:active { transform: scale(0.95); }
+        button:hover { 
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.8); 
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #e62045, #3a1c52);
+        }
+
+        /* Share Button Specifics */
+        .share-btn {
+            background: linear-gradient(135deg, #11998e, #38ef7d); /* Green */
+            margin-top: 20px;
+            color: #fff;
+            border-color: #fff;
+        }
+        .share-btn:hover {
+            background: linear-gradient(135deg, #11998e, #1b5e20);
+        }
+
+        /* The Card Content */
+        #card-content {
+            display: none;
+            background: linear-gradient(to bottom, #fff, #f0f0f0);
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 85%;
+            width: 450px;
+            text-align: center;
+            color: #1a472a; /* Dark Green */
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            opacity: 0;
+            transform: translateY(20px) scale(0.9);
+            border: 5px solid #c31432;
+            position: relative;
+        }
+
+        /* Decorative border inside card */
+        #card-content::after {
+            content: '';
+            position: absolute;
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            border: 2px dashed #1a472a;
+            border-radius: 5px;
+            pointer-events: none;
+        }
+
+        #card-content h2 {
+            color: #c31432;
+            margin-top: 0;
+            font-family: 'Mountains of Christmas', cursive;
+            font-size: 2.8rem;
+        }
+
+        #card-content p { 
+            font-size: 1.2rem; 
+            line-height: 1.6; 
+            color: #333;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .hidden { 
+            opacity: 0 !important; 
+            pointer-events: none !important; 
+        }
+
+        /* Snowfall overlay for UI smoothness */
+        #snow-overlay {
+            position: fixed;
+            top: 0; left:0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <!-- Audio for Magic Effect -->
+    <audio id="magic-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-magical-coin-win-1936.mp3" preload="auto"></audio>
+
+    <div id="ui-container">
+        <!-- Step 1: Welcome -->
+        <div id="step-1" class="ui-element">
+            <h1 id="welcome-text">Merry Christmas!</h1>
+            <p class="subtitle">Let's build a holiday scene together.</p>
+            <button onclick="startExperience()">Start Magic</button>
+        </div>
+
+        <!-- Step 2: Decorate -->
+        <div id="step-2" class="ui-element hidden">
+            <button onclick="decorateTree()">Decorate the Tree</button>
+        </div>
+
+        <!-- Step 3: Snow -->
+        <div id="step-3" class="ui-element hidden">
+            <button onclick="letItSnow()">Let It Snow</button>
+        </div>
+
+        <!-- Step 4: Find Gift -->
+        <div id="step-4" class="ui-element hidden">
+            <button onclick="revealGift()">Where is my gift?</button>
+        </div>
+
+        <!-- Step 5: Open Gift -->
+        <div id="step-5" class="ui-element hidden">
+            <button onclick="openGift()">Open Present</button>
+        </div>
+
+        <!-- Step 6: The Message & Share -->
+        <div id="final-screen" class="ui-element hidden" style="display: flex; flex-direction: column; align-items: center;">
+            <div id="card-content">
+                <h2>Season's Greetings</h2>
+                <p>
+                    May your holidays be wrapped in joy and filled with love.
+                    Wishing you a magical Christmas and a Happy New Year!
+                </p>
+                <p style="font-weight: bold; margin-top: 20px; font-size: 1.5rem;">🎄🎁⛄</p>
+            </div>
+            
+            <button id="share-btn" class="share-btn hidden" onclick="shareExperience()">Share the Joy 📤</button>
+        </div>
+    </div>
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+
+    <script>
+        // --- 1. SCENE SETUP ---
+        const scene = new THREE.Scene();
+        // Dark blue gradientish background using fog
+        scene.background = new THREE.Color(0x0f2027);
+        scene.fog = new THREE.FogExp2(0x0f2027, 0.02);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 6, 14);
+        camera.lookAt(0, 2, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+        scene.add(ambientLight);
+
+        // Moonlight / Starlight
+        const dirLight = new THREE.DirectionalLight(0xaaccff, 0.8);
+        dirLight.position.set(-5, 10, 5);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+
+        // Warm light from front
+        const pointLight = new THREE.PointLight(0xffaa00, 0.5, 20);
+        pointLight.position.set(2, 5, 5);
+        scene.add(pointLight);
+
+        // Snow Ground
+        const floorGeometry = new THREE.PlaneGeometry(100, 100);
+        const floorMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0xffffff, 
+            roughness: 0.9,
+            metalness: 0.1
+        });
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -2;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        // --- 2. OBJECTS ---
+
+        const treeGroup = new THREE.Group();
+        scene.add(treeGroup);
+        treeGroup.visible = false;
+
+        // --- PROCEDURAL CHRISTMAS TREE ---
+        
+        function createTreeLayer(radius, height, yPos) {
+            const geometry = new THREE.ConeGeometry(radius, height, 32);
+            const material = new THREE.MeshStandardMaterial({ 
+                color: 0x1a472a, // Deep Green
+                roughness: 0.8 
+            });
+            const cone = new THREE.Mesh(geometry, material);
+            cone.position.y = yPos;
+            cone.castShadow = true;
+            cone.receiveShadow = true;
+            return cone;
+        }
+
+        // Trunk
+        const trunkGeo = new THREE.CylinderGeometry(0.5, 0.6, 2, 16);
+        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3728 });
+        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+        trunk.position.y = -1;
+        trunk.castShadow = true;
+        treeGroup.add(trunk);
+
+        // Layers
+        const layer1 = createTreeLayer(3.5, 3, 1);
+        const layer2 = createTreeLayer(2.8, 2.5, 2.5);
+        const layer3 = createTreeLayer(2.0, 2.0, 4.0);
+        const layer4 = createTreeLayer(1.2, 1.5, 5.2);
+        
+        treeGroup.add(layer1);
+        treeGroup.add(layer2);
+        treeGroup.add(layer3);
+        treeGroup.add(layer4);
+
+        // Star
+        const starShape = new THREE.Shape();
+        const pts = 5;
+        const outerRadius = 0.5;
+        const innerRadius = 0.2;
+        for(let i=0; i<pts*2; i++){
+            const r = (i%2 === 0) ? outerRadius : innerRadius;
+            const a = (i / (pts*2)) * Math.PI * 2;
+            const x = Math.cos(a) * r;
+            const y = Math.sin(a) * r;
+            if(i===0) starShape.moveTo(x,y);
+            else starShape.lineTo(x,y);
+        }
+        const starGeo = new THREE.ExtrudeGeometry(starShape, { depth: 0.1, bevelEnabled:false });
+        const starMat = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xaa8800, emissiveIntensity: 0.5 });
+        const star = new THREE.Mesh(starGeo, starMat);
+        star.position.set(0, 6.0, 0);
+        star.scale.set(0,0,0); // Hidden initially
+        treeGroup.add(star);
+
+        // Ornaments and Lights Groups (Hidden initially)
+        const ornamentsGroup = new THREE.Group();
+        treeGroup.add(ornamentsGroup);
+        const lightsGroup = new THREE.Group();
+        treeGroup.add(lightsGroup);
+
+        function addOrnament(x, y, z, color, isLight = false) {
+            const size = isLight ? 0.08 : 0.15;
+            const geo = new THREE.SphereGeometry(size, 16, 16);
+            
+            let mat;
+            if (isLight) {
+                mat = new THREE.MeshStandardMaterial({ 
+                    color: color, 
+                    emissive: color,
+                    emissiveIntensity: 1.0,
+                    roughness: 0.1,
+                    metalness: 0.1
+                });
+            } else {
+                mat = new THREE.MeshStandardMaterial({ 
+                    color: color, 
+                    roughness: 0.1, 
+                    metalness: 0.6 
+                });
+            }
+            
+            const sphere = new THREE.Mesh(geo, mat);
+            sphere.position.set(x, y, z);
+            
+            if (isLight) {
+                sphere.userData = { 
+                    blinkSpeed: 0.002 + Math.random() * 0.003, 
+                    blinkOffset: Math.random() * Math.PI * 2 
+                };
+                lightsGroup.add(sphere);
+                // Add a small point light to each light for realism
+                const light = new THREE.PointLight(color, 0.2, 2);
+                sphere.add(light);
+            } else {
+                sphere.castShadow = true;
+                ornamentsGroup.add(sphere);
+            }
+        }
+
+        // Helper to place items on cones
+        function populateTree() {
+            const layers = [
+                { radius: 3.5, y: 1, count: 12 },
+                { radius: 2.8, y: 2.5, count: 10 },
+                { radius: 2.0, y: 4.0, count: 8 },
+                { radius: 1.2, y: 5.2, count: 6 }
+            ];
+            const colors = [0xff0000, 0xffd700, 0x0000ff, 0x00ff00, 0xc0c0c0];
+            const lightColors = [0xff0000, 0xffff00, 0x0000ff, 0x00ff00];
+
+            layers.forEach(layer => {
+                for(let i=0; i<layer.count; i++) {
+                    const angle = (i / layer.count) * Math.PI * 2 + Math.random() * 0.2;
+                    const r = layer.radius * (0.8 + Math.random() * 0.2);
+                    const x = Math.cos(angle) * r;
+                    const z = Math.sin(angle) * r;
+                    const y = layer.y - 1 + Math.random() * 2; // Scatter along height
+
+                    // Alternate between ornament and light
+                    if(Math.random() > 0.4) {
+                        addOrnament(x, y, z, colors[Math.floor(Math.random() * colors.length)]);
+                    } else {
+                        addOrnament(x, y, z, lightColors[Math.floor(Math.random() * lightColors.length)], true);
+                    }
+                }
+            });
+        }
+        
+        populateTree();
+        ornamentsGroup.scale.set(0,0,0); // Hidden
+        lightsGroup.scale.set(0,0,0); // Hidden
+
+
+        // --- GIFT BOX ---
+        const giftGroup = new THREE.Group();
+        scene.add(giftGroup);
+        giftGroup.visible = false;
+        // Positioned slightly in front and left of tree
+        giftGroup.position.set(-2, -1, 3);
+        giftGroup.rotation.y = 0.5;
+
+        // Box Body
+        const boxGeo = new THREE.BoxGeometry(2, 1.5, 2);
+        const boxMat = new THREE.MeshStandardMaterial({ color: 0xc31432 }); // Red
+        const box = new THREE.Mesh(boxGeo, boxMat);
+        box.castShadow = true;
+        giftGroup.add(box);
+
+        // Ribbon (Vertical)
+        const ribbonGeoV = new THREE.BoxGeometry(2.05, 1.5, 0.4);
+        const ribbonMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.4 });
+        const ribbonV = new THREE.Mesh(ribbonGeoV, ribbonMat);
+        giftGroup.add(ribbonV);
+
+        // Ribbon (Horizontal)
+        const ribbonGeoH = new THREE.BoxGeometry(0.4, 1.5, 2.05);
+        const ribbonH = new THREE.Mesh(ribbonGeoH, ribbonMat);
+        giftGroup.add(ribbonH);
+
+        // Lid Group (For animation)
+        const lidGroup = new THREE.Group();
+        lidGroup.position.y = 0.75; // Top of box
+        giftGroup.add(lidGroup);
+
+        // Lid Mesh
+        const lidGeo = new THREE.BoxGeometry(2.1, 0.3, 2.1);
+        const lid = new THREE.Mesh(lidGeo, boxMat);
+        lid.position.y = 0.15;
+        lid.castShadow = true;
+        lidGroup.add(lid);
+
+        // Lid Ribbon
+        const lidRibbonV = new THREE.BoxGeometry(2.15, 0.32, 0.4);
+        const lidRibbonMeshV = new THREE.Mesh(lidRibbonV, ribbonMat);
+        lidRibbonMeshV.position.y = 0.15;
+        lidGroup.add(lidRibbonMeshV);
+
+        const lidRibbonH = new THREE.BoxGeometry(0.4, 0.32, 2.15);
+        const lidRibbonMeshH = new THREE.Mesh(lidRibbonH, ribbonMat);
+        lidRibbonMeshH.position.y = 0.15;
+        lidGroup.add(lidRibbonMeshH);
+
+        // Bow
+        const bowGeo = new THREE.TorusKnotGeometry(0.3, 0.1, 64, 8);
+        const bow = new THREE.Mesh(bowGeo, ribbonMat);
+        bow.position.y = 0.5;
+        lidGroup.add(bow);
+
+        // --- SANTA AND SLEIGH ---
+        const sleighGroup = new THREE.Group();
+        scene.add(sleighGroup);
+        // Start high up and far back
+        sleighGroup.position.set(10, 8, -10);
+
+        // 1. Sleigh Body
+        const sleighGeo = new THREE.BoxGeometry(1.5, 0.8, 2.5);
+        const sleighMat = new THREE.MeshStandardMaterial({ color: 0x8b0000 }); // Dark red
+        const sleigh = new THREE.Mesh(sleighGeo, sleighMat);
+        sleighGroup.add(sleigh);
+
+        // 2. Runners (Torus segments or simple thin boxes)
+        const runnerMat = new THREE.MeshStandardMaterial({ color: 0xc0c0c0, metalness: 0.8, roughness: 0.2 });
+        const runnerGeo = new THREE.BoxGeometry(0.1, 0.1, 3.5);
+        
+        const leftRunner = new THREE.Mesh(runnerGeo, runnerMat);
+        leftRunner.position.set(0.6, -0.6, 0);
+        leftRunner.rotation.x = -0.1; // Tilt up front
+        sleighGroup.add(leftRunner);
+
+        const rightRunner = new THREE.Mesh(runnerGeo, runnerMat);
+        rightRunner.position.set(-0.6, -0.6, 0);
+        rightRunner.rotation.x = -0.1;
+        sleighGroup.add(rightRunner);
+
+        // 3. Santa (Low Poly)
+        const santaBodyGeo = new THREE.CylinderGeometry(0.4, 0.5, 0.8, 12);
+        const santaRedMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+        const santaBody = new THREE.Mesh(santaBodyGeo, santaRedMat);
+        santaBody.position.y = 0.6;
+        sleighGroup.add(santaBody);
+
+        const santaHeadGeo = new THREE.SphereGeometry(0.3, 16, 16);
+        const skinMat = new THREE.MeshStandardMaterial({ color: 0xffccaa });
+        const santaHead = new THREE.Mesh(santaHeadGeo, skinMat);
+        santaHead.position.y = 1.2;
+        sleighGroup.add(santaHead);
+
+        const beardGeo = new THREE.SphereGeometry(0.2, 16, 16);
+        const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+        const beard = new THREE.Mesh(beardGeo, whiteMat);
+        beard.position.set(0, 1.1, 0.25);
+        sleighGroup.add(beard);
+
+        const hatGeo = new THREE.ConeGeometry(0.3, 0.6, 16);
+        const hat = new THREE.Mesh(hatGeo, santaRedMat);
+        hat.position.set(0, 1.6, 0);
+        hat.rotation.x = -0.2;
+        sleighGroup.add(hat);
+
+        // 4. Reindeer (Simplified)
+        // Positioned in front of sleigh
+        const deerGroup = new THREE.Group();
+        deerGroup.position.z = 3.5; 
+        sleighGroup.add(deerGroup);
+
+        const deerBodyGeo = new THREE.BoxGeometry(0.6, 0.6, 1.2);
+        const deerMat = new THREE.MeshStandardMaterial({ color: 0x5c4033 }); // Brown
+        const deerBody = new THREE.Mesh(deerBodyGeo, deerMat);
+        deerGroup.add(deerBody);
+
+        // Deer Neck/Head
+        const deerNeckGeo = new THREE.BoxGeometry(0.3, 0.6, 0.3);
+        const deerNeck = new THREE.Mesh(deerNeckGeo, deerMat);
+        deerNeck.position.set(0, 0.5, 0.5);
+        deerNeck.rotation.x = -0.3;
+        deerGroup.add(deerNeck);
+
+        const deerHeadGeo = new THREE.BoxGeometry(0.35, 0.35, 0.5);
+        const deerHead = new THREE.Mesh(deerHeadGeo, deerMat);
+        deerHead.position.set(0, 0.8, 0.8);
+        deerGroup.add(deerHead);
+
+        // Red Nose
+        const noseGeo = new THREE.SphereGeometry(0.08, 8, 8);
+        const noseMat = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Glowing red basic material
+        const nose = new THREE.Mesh(noseGeo, noseMat);
+        nose.position.set(0, 0.8, 1.1);
+        deerGroup.add(nose);
+
+        // Antlers
+        const antlerGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.6);
+        const antlerMat = new THREE.MeshStandardMaterial({ color: 0x332211 });
+        
+        const leftAntler = new THREE.Mesh(antlerGeo, antlerMat);
+        leftAntler.position.set(0.15, 1.1, 0.7);
+        leftAntler.rotation.z = -0.5;
+        deerGroup.add(leftAntler);
+
+        const rightAntler = new THREE.Mesh(antlerGeo, antlerMat);
+        rightAntler.position.set(-0.15, 1.1, 0.7);
+        rightAntler.rotation.z = 0.5;
+        deerGroup.add(rightAntler);
+
+        // Reins (Visual lines)
+        const reinMat = new THREE.LineBasicMaterial({ color: 0xffd700 });
+        const points = [];
+        points.push(new THREE.Vector3(0, 0.8, -0.7)); // From sleigh front
+        points.push(new THREE.Vector3(0, 0.5, 2.9));  // To deer back
+        const reinGeo = new THREE.BufferGeometry().setFromPoints(points);
+        const reins = new THREE.Line(reinGeo, reinMat);
+        sleighGroup.add(reins);
+
+
+        // --- SNOW SYSTEM ---
+        let snowSystem;
+        let snowGeo;
+        
+        function createSnow() {
+            const particleCount = 2000;
+            snowGeo = new THREE.BufferGeometry();
+            const positions = [];
+            const velocities = [];
+
+            for(let i=0; i<particleCount; i++) {
+                // Random position in a large cube above scene
+                positions.push(
+                    Math.random() * 40 - 20, // x: -20 to 20
+                    Math.random() * 30 + 5,  // y: 5 to 35
+                    Math.random() * 40 - 20  // z: -20 to 20
+                );
+                // Fall speed
+                velocities.push(Math.random() * 0.1 + 0.05); 
+            }
+
+            snowGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            snowGeo.userData = { velocities: velocities };
+
+            // Simple white dots
+            const snowMat = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.15,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            snowSystem = new THREE.Points(snowGeo, snowMat);
+            scene.add(snowSystem);
+        }
+
+
+        // --- LOGIC & ANIMATION ---
+
+        let isSnowing = false;
+        const magicSound = document.getElementById('magic-sound');
+
+        function startExperience() {
+            magicSound.play().catch(e => console.log("Audio play blocked until interaction")); 
+            document.getElementById('step-1').classList.add('hidden');
+            treeGroup.visible = true;
+            
+            // Pop up tree layers one by one
+            treeGroup.scale.set(0,0,0);
+            gsap.to(treeGroup.scale, { x:1, y:1, z:1, duration: 1.5, ease: "elastic.out(1, 0.5)" });
+
+            setTimeout(() => {
+                document.getElementById('step-2').classList.remove('hidden');
+            }, 1500);
+        }
+
+        function decorateTree() {
+            document.getElementById('step-2').classList.add('hidden');
+            
+            // Show ornaments and lights
+            gsap.to(ornamentsGroup.scale, { x:1, y:1, z:1, duration: 0.8, ease: "back.out(1.7)" });
+            gsap.to(lightsGroup.scale, { x:1, y:1, z:1, duration: 0.8, ease: "back.out(1.7)" });
+            
+            // Show and Spin Star
+            gsap.to(star.scale, { x:1, y:1, z:1, duration: 1, delay: 0.5, ease: "elastic.out" });
+            gsap.to(star.rotation, { y: Math.PI*4, duration: 3, ease: "power2.out" });
+
+            // Light up the tree (add lights to ornaments logic visual only)
+            // We just boost the point light
+            gsap.to(pointLight, { intensity: 1.2, duration: 1 });
+
+            setTimeout(() => {
+                document.getElementById('step-3').classList.remove('hidden');
+            }, 1000);
+        }
+
+        function letItSnow() {
+            document.getElementById('step-3').classList.add('hidden');
+            createSnow();
+            isSnowing = true;
+            
+            setTimeout(() => {
+                document.getElementById('step-4').classList.remove('hidden');
+            }, 1000);
+        }
+
+        function revealGift() {
+            document.getElementById('step-4').classList.add('hidden');
+            giftGroup.visible = true;
+            giftGroup.scale.set(0,0,0);
+            
+            gsap.to(giftGroup.scale, { x:1, y:1, z:1, duration: 1.2, ease: "elastic.out(1, 0.6)" });
+
+            // Move camera to look at gift
+            gsap.to(camera.position, { x: -2, y: 3, z: 8, duration: 2 });
+            gsap.to(camera.rotation, { x: -0.2, duration: 2 }); // slight tilt down
+
+            setTimeout(() => {
+                document.getElementById('step-5').classList.remove('hidden');
+            }, 1500);
+        }
+
+        function openGift() {
+            document.getElementById('step-5').classList.add('hidden');
+
+            // 1. Pop Lid
+            gsap.to(lidGroup.position, { y: 2, x: 1, duration: 0.5 });
+            gsap.to(lidGroup.rotation, { z: -Math.PI/4, duration: 0.5 });
+
+            // 2. Show Message (HTML) and Share Section
+            const finalScreen = document.getElementById('final-screen');
+            finalScreen.classList.remove('hidden');
+            
+            const card = document.getElementById('card-content');
+            card.style.display = 'block';
+            
+            gsap.to(card, {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                duration: 1,
+                delay: 0.5,
+                ease: "back.out(1.2)"
+            });
+
+            // Show Share button slightly later
+            const shareBtn = document.getElementById('share-btn');
+            setTimeout(() => {
+                shareBtn.classList.remove('hidden');
+                gsap.from(shareBtn, { opacity: 0, y: 20, duration: 0.5 });
+            }, 1500);
+
+            // 3. Magical Glow from box
+            const giftLight = new THREE.PointLight(0xffd700, 0, 5);
+            giftLight.position.set(0, 0.5, 0);
+            giftGroup.add(giftLight);
+            gsap.to(giftLight, { intensity: 2, duration: 0.5 });
+        }
+
+        function shareExperience() {
+            const shareData = {
+                title: 'Merry Christmas!',
+                text: 'Check out this magical 3D Christmas surprise! 🎄✨',
+                url: window.location.href
+            };
+
+            if (navigator.share) {
+                navigator.share(shareData).catch(console.error);
+            } else {
+                // Fallback for desktop/unsupported
+                const dummy = document.createElement('input');
+                document.body.appendChild(dummy);
+                dummy.value = window.location.href;
+                dummy.select();
+                document.execCommand('copy');
+                document.body.removeChild(dummy);
+                alert("Link copied to clipboard! Send it to your friends.");
+            }
+        }
+
+        // --- RENDER LOOP ---
+        let sleighAngle = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const time = Date.now();
+
+            // Rotate star gently
+            star.rotation.y += 0.01;
+
+            // Blinking lights animation
+            lightsGroup.children.forEach(light => {
+                const intensity = Math.abs(Math.sin(time * light.userData.blinkSpeed + light.userData.blinkOffset));
+                light.material.emissiveIntensity = 0.5 + intensity * 0.8;
+                // Update the attached PointLight intensity as well
+                if (light.children[0] && light.children[0].isPointLight) {
+                    light.children[0].intensity = 0.1 + intensity * 0.3;
+                }
+            });
+
+            // Animate Sleigh (Orbiting)
+            sleighAngle += 0.005;
+            const radius = 10;
+            sleighGroup.position.x = Math.sin(sleighAngle) * radius;
+            sleighGroup.position.z = Math.cos(sleighAngle) * radius;
+            sleighGroup.rotation.y = sleighAngle + Math.PI; // Face direction of travel
+            sleighGroup.position.y = 8 + Math.sin(sleighAngle * 2); // Bob up and down
+
+            // Snow Animation
+            if(isSnowing && snowSystem) {
+                const positions = snowSystem.geometry.attributes.position.array;
+                const velocities = snowSystem.geometry.userData.velocities;
+
+                for(let i=0; i<velocities.length; i++) {
+                    // Update Y
+                    positions[i*3 + 1] -= velocities[i];
+
+                    // Reset if too low
+                    if(positions[i*3 + 1] < -2) {
+                        positions[i*3 + 1] = 30; // reset to top
+                    }
+                }
+                snowSystem.geometry.attributes.position.needsUpdate = true;
+                // Rotate entire snow system slowly
+                snowSystem.rotation.y += 0.001;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Resize support
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+
+    </script>
+</body>
+</html>
